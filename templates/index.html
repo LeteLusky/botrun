@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Bot Runner</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-6">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <h1 class="display-4 mb-3">
+                        <i class="fab fa-discord text-primary"></i>
+                        Discord Bot Runner
+                    </h1>
+                    <p class="lead text-muted">
+                        Run your Discord bot with ease. Simply enter your bot token and start interacting with your server.
+                    </p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('premium') }}" class="btn btn-warning btn-lg me-2 disabled">
+                            <i class="fas fa-tools me-2"></i>Premium (Mantenimiento)
+                        </a>
+                        <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary disabled">
+                            <i class="fas fa-tools me-2"></i>Admin (Mantenimiento)
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Premium Free Banner -->
+                <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border: 2px solid #28a745; background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);">
+                    <div class="text-center">
+                        <h4 class="alert-heading mb-3">
+                            <i class="fas fa-crown text-warning me-2"></i>
+                            🎉 ¡TODAS LAS FUNCIONES PREMIUM AHORA GRATIS! 🎉
+                        </h4>
+                        <p class="mb-2 fw-bold">Aprovecha mientras está en mantenimiento nuestro sistema de pagos:</p>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-3 col-6">
+                                <span class="badge bg-danger w-100 py-2">🔒 Moderación Avanzada</span>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <span class="badge bg-success w-100 py-2">🎵 Sistema de Música</span>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <span class="badge bg-warning w-100 py-2">💰 Economía Completa</span>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <span class="badge bg-info w-100 py-2">🛠️ Utilidades Premium</span>
+                            </div>
+                        </div>
+                        <p class="mb-0">
+                            <i class="fas fa-clock me-1"></i>
+                            <strong>Oferta temporal:</strong> Mientras reparamos el sistema de suscripciones, ¡disfruta gratis de todas las funciones premium!
+                        </p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else ('warning' if category == 'warning' else 'success') }} alert-dismissible fade show" role="alert">
+                                <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else ('exclamation-circle' if category == 'warning' else 'check-circle') }} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Bot Status Card -->
+                <div class="card mb-4" id="status-card">
+                    <div class="card-header d-flex align-items-center">
+                        <i class="fas fa-robot me-2"></i>
+                        <h5 class="mb-0">Bot Status</h5>
+                        <div class="ms-auto">
+                            <span class="badge bg-{{ 'success' if bot_status.running else 'secondary' }} status-badge">
+                                <i class="fas fa-circle pulse me-1" style="font-size: 0.7em;"></i>
+                                {{ 'Running' if bot_status.running else 'Stopped' }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if bot_status.running and bot_status.info %}
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <small class="text-muted">Bot Name</small>
+                                    <div class="fw-bold">{{ bot_status.info.name }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">Bot ID</small>
+                                    <div class="fw-bold font-monospace">{{ bot_status.info.id }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">Servers</small>
+                                    <div class="fw-bold">{{ bot_status.info.guilds }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">Total Users</small>
+                                    <div class="fw-bold">{{ bot_status.info.users }}</div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No bot is currently running. Enter a token below to get started.
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Token Input Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-key me-2"></i>
+                            Discord Bot Token
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('start_bot') }}" id="token-form">
+                            <div class="mb-3">
+                                <label for="token" class="form-label">
+                                    Bot Token
+                                    <small class="text-muted">
+                                        <i class="fas fa-lock me-1"></i>
+                                        Your token is processed securely and not stored permanently
+                                    </small>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fab fa-discord"></i>
+                                    </span>
+                                    <input 
+                                        type="password" 
+                                        class="form-control font-monospace" 
+                                        id="token" 
+                                        name="token" 
+                                        placeholder="Enter your Discord bot token here..."
+                                        required
+                                        {% if bot_status.running %}disabled{% endif %}
+                                    >
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-outline-secondary" 
+                                        id="toggle-token"
+                                        {% if bot_status.running %}disabled{% endif %}
+                                    >
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">
+                                    Get your bot token from the 
+                                    <a href="https://discord.com/developers/applications" target="_blank" class="text-decoration-none">
+                                        Discord Developer Portal
+                                        <i class="fas fa-external-link-alt ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                {% if bot_status.running %}
+                                    <button type="button" class="btn btn-danger" onclick="stopBot()">
+                                        <i class="fas fa-stop me-2"></i>
+                                        Stop Bot
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-play me-2"></i>
+                                        Start Bot
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Bot Commands Info -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-terminal me-2"></i>
+                            Available Bot Commands
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-success mb-3">
+                            <h6 class="alert-heading">🎉 ¡Bot Premium GRATIS!</h6>
+                            <p class="mb-0">Durante el mantenimiento, TODAS las funciones premium están disponibles sin costo. ¡Disfruta de seguridad, economía, música y más!</p>
+                        </div>
+                        
+                        <div class="alert alert-info mb-3">
+                            <h6 class="alert-heading">🔧 Mantenimiento del Sistema Premium</h6>
+                            <p class="mb-0">Mientras reparamos el sistema de pagos, puedes usar GRATIS todas las funciones premium: moderación avanzada, economía completa, juegos extras, música y utilidades especiales.</p>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="command-item">
+                                    <code class="bg-dark p-2 rounded d-block mb-1">!help</code>
+                                    <small class="text-muted">📖 Show all command categories</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="command-item">
+                                    <code class="bg-dark p-2 rounded d-block mb-1">!ping</code>
+                                    <small class="text-muted">🏓 Check bot latency</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="command-item">
+                                    <code class="bg-dark p-2 rounded d-block mb-1">!joke</code>
+                                    <small class="text-muted">😂 Get a random joke</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="command-item">
+                                    <code class="bg-dark p-2 rounded d-block mb-1">!rps rock</code>
+                                    <small class="text-muted">✋ Play Rock Paper Scissors</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="command-item">
+                                    <code class="bg-dark p-2 rounded d-block mb-1">!calc 2+2*3</code>
+                                    <small class="text-muted">🧮 Calculate math expressions</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="command-item">
+                                    <code class="bg-dark p-2 rounded d-block mb-1">!poll Question?</code>
+                                    <small class="text-muted">📊 Create polls with reactions</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="command-item">
+                                    <code class="bg-dark p-2 rounded d-block mb-1">!password 16</code>
+                                    <small class="text-muted">🔐 Generate secure passwords</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="command-item">
+                                    <code class="bg-dark p-2 rounded d-block mb-1">!kick @user</code>
+                                    <small class="text-muted">👢 <span class="text-warning">⭐ PREMIUM GRATIS:</span> Kick users (Admin only)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="command-item">
+                                    <code class="bg-dark p-2 rounded d-block mb-1">!daily</code>
+                                    <small class="text-muted">💰 <span class="text-warning">⭐ PREMIUM GRATIS:</span> Claim daily coins</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="command-item">
+                                    <code class="bg-dark p-2 rounded d-block mb-1">!play Song</code>
+                                    <small class="text-muted">🎵 <span class="text-warning">⭐ PREMIUM GRATIS:</span> Play music system</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="command-item">
+                                    <code class="bg-dark p-2 rounded d-block mb-1">!hangman</code>
+                                    <small class="text-muted">🎮 <span class="text-warning">⭐ PREMIUM GRATIS:</span> Play hangman game</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Premium Features Available Free -->
+                        <div class="mt-4 p-3 bg-gradient rounded" style="background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);">
+                            <h6 class="text-dark mb-3 fw-bold">
+                                <i class="fas fa-star me-2"></i>
+                                Funciones Premium Disponibles GRATIS Durante Mantenimiento:
+                            </h6>
+                            <div class="row g-2 text-dark">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-shield-alt text-danger me-2"></i>
+                                        <span><strong>Moderación:</strong> kick, ban, unban, clear, warn</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-music text-success me-2"></i>
+                                        <span><strong>Música:</strong> play, pause, stop, queue</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-coins text-warning me-2"></i>
+                                        <span><strong>Economía:</strong> daily, balance, give, shop</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-gamepad text-info me-2"></i>
+                                        <span><strong>Juegos:</strong> hangman, wordguess, numguess</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-tools text-primary me-2"></i>
+                                        <span><strong>Utilidades:</strong> QR, URL shortener, convertir</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-crown text-warning me-2"></i>
+                                        <span><strong>¡Y mucho más!</strong> Más de 30 comandos premium</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <h6 class="mb-3">📊 Categorías Disponibles (60+ Comandos):</h6>
+                            <div class="row g-2">
+                                <div class="col-6 col-md-3">
+                                    <span class="badge bg-primary w-100">🛠️ Basic (4)</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="badge bg-success w-100">🎮 Fun (5)</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="badge bg-warning w-100">🎯 Games (8)</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="badge bg-info w-100">⚙️ Utility (7)</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="badge bg-secondary w-100">👤 User (3)</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="badge bg-danger w-100">🔧 Tools (5)</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="badge bg-dark w-100">🎲 Random (4)</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="badge bg-light text-dark w-100">📊 Math (3)</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="badge bg-primary w-100">🔤 Text (4)</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="badge bg-danger w-100">🔒 Security (6) ⭐</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="badge bg-success w-100">🎵 Music (4) ⭐</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="badge bg-warning w-100">💰 Economy (4) ⭐</span>
+                                </div>
+                            </div>
+                            <div class="mt-2 text-center">
+                                <small class="text-warning">
+                                    <i class="fas fa-star me-1"></i>
+                                    ⭐ = Funciones premium ahora disponibles GRATIS
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="mt-4">
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Important: Enable Message Content Intent
+                        </h6>
+                        <p class="mb-0">
+                            For commands to work, you must enable <strong>Message Content Intent</strong> in your bot's settings at the 
+                            <a href="https://discord.com/developers/applications" target="_blank" class="text-decoration-none">Discord Developer Portal</a>. 
+                            Go to Bot → Privileged Gateway Intents → Enable "Message Content Intent".
+                        </p>
+                    </div>
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            How to Use
+                        </h6>
+                        <ol class="mb-0 ps-3">
+                            <li>Create a bot application in the <a href="https://discord.com/developers/applications" target="_blank" class="text-decoration-none">Discord Developer Portal</a></li>
+                            <li><strong>Enable Message Content Intent:</strong> In the Bot section, scroll down to "Privileged Gateway Intents" and enable "Message Content Intent"</li>
+                            <li>Copy your bot token from the Bot section</li>
+                            <li>Paste the token in the input field above</li>
+                            <li>Click "Start Bot" to begin running your Discord bot</li>
+                            <li>Invite your bot to a server and try the available commands</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <!-- Credits Section -->
+                <div class="mt-4">
+                    <div class="card border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="card-body text-center text-white">
+                            <h5 class="mb-3">
+                                <i class="fab fa-youtube me-2"></i>
+                                Created by LeteLusky
+                            </h5>
+                            <p class="mb-3">Check out amazing content and tutorials!</p>
+                            <a href="https://www.youtube.com/@LeteLusky" target="_blank" class="btn btn-light btn-lg">
+                                <i class="fab fa-youtube me-2 text-danger"></i>
+                                Visit YouTube Channel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stop Bot Modal -->
+    <form method="POST" action="{{ url_for('stop_bot') }}" style="display: none;" id="stop-form">
+    </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

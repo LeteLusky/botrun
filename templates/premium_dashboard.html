@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Dashboard - Discord Bot Runner</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container-fluid min-vh-100 py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <h1 class="display-4 text-warning mb-2">
+                        <i class="fas fa-crown me-3"></i>
+                        Premium Dashboard
+                    </h1>
+                    <p class="lead text-muted">Manage your premium subscription</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Main
+                    </a>
+                </div>
+
+                <!-- Subscription Status -->
+                <div class="card mb-4">
+                    <div class="card-header bg-{{ 'success' if user.is_active and not user.is_expired() else 'danger' }}">
+                        <h5 class="mb-0 text-white">
+                            <i class="fas fa-{{ 'check-circle' if user.is_active and not user.is_expired() else 'times-circle' }} me-2"></i>
+                            Subscription Status: 
+                            {% if user.is_active and not user.is_expired() %}
+                                Active
+                            {% else %}
+                                Expired
+                            {% endif %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Plan Type</h6>
+                                <p class="text-capitalize">
+                                    <i class="fas fa-{{ 'crown' if user.plan_type == 'enterprise' else 'star' }} me-2"></i>
+                                    {{ user.plan_type }}
+                                </p>
+                                
+                                <h6>Email</h6>
+                                <p>{{ user.email }}</p>
+                                
+                                <h6>Activation Code</h6>
+                                <p><code>{{ user.activation_code }}</code></p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Activated On</h6>
+                                <p>{{ user.activated_at.strftime('%Y-%m-%d %H:%M UTC') }}</p>
+                                
+                                <h6>Expires On</h6>
+                                <p>{{ user.expires_at.strftime('%Y-%m-%d %H:%M UTC') if user.expires_at else 'Never' }}</p>
+                                
+                                <h6>Days Remaining</h6>
+                                <p class="text-{{ 'success' if user.days_remaining() > 7 else 'warning' if user.days_remaining() > 0 else 'danger' }}">
+                                    {{ user.days_remaining() }} days
+                                </p>
+                            </div>
+                        </div>
+                        
+                        {% if user.discord_token_hash %}
+                        <div class="alert alert-success mt-3">
+                            <i class="fas fa-check me-2"></i>
+                            Discord token is linked! You can now use premium features.
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Discord token not linked yet. Link it below to use premium features.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Link Token (if not linked) -->
+                {% if not user.discord_token_hash %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-link me-2"></i>Link Discord Token</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('link_token') }}">
+                            <input type="hidden" name="email" value="{{ user.email }}">
+                            <div class="mb-3">
+                                <label for="token" class="form-label">Discord Bot Token</label>
+                                <input type="password" class="form-control" id="token" name="token" 
+                                       placeholder="Your Discord bot token" required>
+                                <div class="form-text">This will link your Discord bot to this premium account</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-link me-2"></i>Link Token
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Premium Features -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-star me-2"></i>Your Premium Features</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if user.plan_type == 'premium' %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i>All 60+ bot commands</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Advanced moderation (kick, ban, warn)</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Economy system with coins</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Music commands (demo)</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i>All games and utilities</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Unlimited server members</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Premium support</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Regular updates</li>
+                                </ul>
+                            </div>
+                        </div>
+                        {% elif user.plan_type == 'enterprise' %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i>Everything in Premium</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Custom bot commands</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Advanced analytics</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>White-label support</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i>Multiple bot instances</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>24/7 dedicated support</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Priority feature requests</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Custom integrations</li>
+                                </ul>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-4">
+                            <a href="{{ url_for('index') }}" class="btn btn-success btn-lg">
+                                <i class="fas fa-robot me-2"></i>Start Your Premium Bot
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Activation - Discord Bot Runner</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container-fluid min-vh-100 py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10">
+                
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <h1 class="display-4 text-primary mb-2">
+                        <i class="fas fa-crown me-3"></i>
+                        Premium Bot Activation
+                    </h1>
+                    <p class="lead text-muted">Unlock powerful features for huge Discord servers</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Main
+                    </a>
+                </div>
+
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Premium Plans -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-warning h-100">
+                            <div class="card-header text-center bg-warning text-dark">
+                                <h4><i class="fas fa-star me-2"></i>Premium Plan</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center mb-3">
+                                    <h2 class="text-warning">$9.99</h2>
+                                    <p class="text-muted">per month</p>
+                                </div>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i>All 60+ bot commands</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Advanced moderation tools</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Economy system</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Music commands (demo)</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Unlimited server members</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Priority support</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-danger h-100">
+                            <div class="card-header text-center bg-danger">
+                                <h4><i class="fas fa-crown me-2"></i>Enterprise Plan</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center mb-3">
+                                    <h2 class="text-danger">$24.99</h2>
+                                    <p class="text-muted">per month</p>
+                                </div>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i>Everything in Premium</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Custom bot commands</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Advanced analytics</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>White-label support</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Multiple bot instances</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>24/7 dedicated support</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchase Instructions -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-shopping-cart me-2"></i>How to Purchase</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Step 1: Buy from SellSN</h6>
+                                <p>Visit our SellSN store and purchase your desired plan. You'll receive an activation code via email.</p>
+                                <a href="#" class="btn btn-primary mb-3" target="_blank">
+                                    <i class="fas fa-external-link-alt me-2"></i>Buy on SellSN
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Step 2: Activate Code</h6>
+                                <p>Enter your activation code below to unlock premium features for your Discord bot.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Activation -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-key me-2"></i>Activate Premium Code</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('activate_code') }}">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="code" class="form-label">Activation Code</label>
+                                        <input type="text" class="form-control" id="code" name="code" 
+                                               placeholder="Enter your 16-character code" maxlength="16" required>
+                                        <div class="form-text">Code is case-insensitive</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email Address</label>
+                                        <input type="email" class="form-control" id="email" name="email" 
+                                               placeholder="your@email.com" required>
+                                        <div class="form-text">Used to manage your subscription</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-unlock me-2"></i>Activate Premium
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Link Token Section -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-link me-2"></i>Link Discord Token</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Already have premium? Link your Discord bot token to your account:</p>
+                        <form method="POST" action="{{ url_for('link_token') }}">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="link_email" class="form-label">Premium Email</label>
+                                        <input type="email" class="form-control" id="link_email" name="email" 
+                                               placeholder="your@email.com" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="link_token" class="form-label">Discord Bot Token</label>
+                                        <input type="password" class="form-control" id="link_token" name="token" 
+                                               placeholder="Your Discord bot token" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-link me-2"></i>Link Token
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
